@@ -41,8 +41,13 @@ class EmbeddingModel():
             self.q_model = SentenceTransformer(model_path[0])
             self.doc_model = SentenceTransformer(model_path[1])
 
-        if 'bge' in model_path:
-            self.query_instruction_for_retrieval="Represent this sentence for searching relevant passages:"
+        if 'bge' or 'INTERS' or 'Meta-Llama-3-8B-Instruct' or 'Mistral-7B-Instruct' in model_path:
+            self.query_instruction_for_retrieval="Represent this sentence for searching relevant passages: {content}"
+        elif 'Meta-Llama-3-8B-Instruct' in model_path:
+            self.query_instruction_for_retrieval="<|begin_of_text|> <|start_header_id|> system <|end_header_id|> \n\n You are an excellent embedding model <|start_header_id|> user <|end_header_id|> \n\n Represent this sentence for searching relevant passages: {content} <|eot_id|> <|start_header_id|> assistant <|end_header_id|> \n\n"
+        elif 'Mistral-7B-Instruct' in model_path:
+            self.query_instruction_for_retrieval="<|system|> you are an excellent embedding model </s> \n\n <|user|> <s>[INST] Represent this sentence for searching relevant passages: {content} [/INST] \n\n <|assistant|>"
+        
 
     def start_multi_process_pool(self, target_devices: List[str] = None) -> Dict[str, object]:
         logger.info("Start multi-process pool on devices: {}".format(', '.join(map(str, target_devices))))
@@ -66,7 +71,7 @@ class EmbeddingModel():
 
     def encode_queries(self, queries: List[str], batch_size: int = 16, **kwargs) -> Union[List[Tensor], np.ndarray, Tensor]:
         if self.query_instruction_for_retrieval:
-            queries = [ self.query_instruction_for_retrieval + q for q in queries]
+            queries = [ self.query_instruction_for_retrieval.format(content=q)  for q in queries]
         return self.q_model.encode(queries, batch_size=batch_size, **kwargs)
     
     def encode_corpus(self, corpus: Union[List[Dict[str, str]], Dict[str, List]], batch_size: int = 8, **kwargs) -> Union[List[Tensor], np.ndarray, Tensor]:

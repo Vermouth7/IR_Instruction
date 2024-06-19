@@ -1,4 +1,9 @@
 import os
+
+os.environ["WORLD_SIZE"] = "1"
+os.environ['CUDA_VISIBLE_DEVICES']='7'
+
+
 import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
@@ -12,11 +17,6 @@ from src import (DatasetProcessFn, DefaultDataCollator, FileLogger, Metric,
 from torch.utils.data import DataLoader
 from transformers import HfArgumentParser
 from transformers.utils import logging
-
-# os.environ["WORLD_SIZE"] = "1"
-# os.environ['CUDA_VISIBLE_DEVICES']='0,1,2,3'
-
-
 
 logger = logging.get_logger(__name__)
 
@@ -159,7 +159,7 @@ def truncate(text, tokenizer, max_length):
         return text
 
 
-def process_rerank(tokenizer, rerank_method, prompt_template, query_max_length=64, doc_max_length=512, hits=10, fewshot_data=None, shots=None, cache_dir=None):
+def process_rerank(tokenizer, rerank_method, prompt_template, query_max_length=64, doc_max_length=512, hits=10, fewshot_data=None, shots=None, cache_dir=None,args=None):
     if fewshot_data is not None:
         fewshot_data = datasets.load_dataset("json", data_files=fewshot_data, split="train", cache_dir=cache_dir)
         rng = np.random.default_rng(42)
@@ -258,13 +258,19 @@ def process_rerank(tokenizer, rerank_method, prompt_template, query_max_length=6
             doc_text = truncate(doc_text, tokenizer, doc_max_length)
 
             prompt = prompt_template.format(query=query, text=doc_text)
-            # print(prompt)
             # NOTE: prepend fewshot prompt
             if fewshot_prompt is not None:
                 prompt = fewshot_prompt + prompt
 
-            output = tokenizer(prompt)
-
+            
+            if 'Meta-Llama-3-8B-Instruct' in args.model_name_or_path:
+                prompt="<|begin_of_text|> <|start_header_id|> system <|end_header_id|> \n\n You are an excellent planner <|start_header_id|> user <|end_header_id|> \n\n {} <|eot_id|> <|start_header_id|> assistant <|end_header_id|> \n\n".format(prompt) 
+                output=tokenizer(prompt)
+            elif 'Mistral-7B-Instruct' in args.model_name_or_path:
+                prompt="<|system|> you are an excellent planner </s> \n\n <|user|> <s>[INST] {} [/INST] \n\n <|assistant|>".format(prompt)
+                output=tokenizer(prompt)
+            else:
+                output = tokenizer(prompt)
             output["query_id"] = query_id
             output["doc_id"] = doc_id
 
@@ -361,6 +367,7 @@ def main():
             fewshot_data=args.fewshot_data,
             shots=args.shots,
             cache_dir=args.dataset_cache_dir,
+            args=args,
         )
         dataset = datasets.load_dataset("json", data_files=args.eval_data, cache_dir=args.dataset_cache_dir, split="train")
         dataset = dataset.map(process_fn, batched=True, num_proc=32, remove_columns=dataset.column_names, with_indices=True)
@@ -382,8 +389,8 @@ def main():
         )
         if args.rerank_method == "pointwise":
             results = model.rerank_pointwise(dataloader, accelerator=accelerator)
-            # for i in range(3):
-            #     print(re.findall(r'doc_id=(\d+)', str(results[i][:5])))
+            for i in range(3):
+                print(re.findall(r'doc_id=(\d+)', str(results[i][:5])))
         elif args.rerank_method == "pairwise":
             results = model.rerank_pairwise(dataloader, prompt_template=prompt_template, accelerator=accelerator)
             # for i in range(3):
