@@ -156,7 +156,7 @@ TOKENIZER_PATH="/data1/chh/models/meta-llama/Meta-Llama-3-8B-Instruct"
 #   --dataset_name my_dataset \
 #   --rerank_method pointwise
 
-# torchrun --nproc_per_node 2 rerank.py \
+# torchrun --nproc_per_node 1 rerank.py \
 #   --eval_data ${EVAL_DATA_PATH}/my_dataset.jsonl \
 #   --output_dir ${RESULT_PATH} \
 #   --model_name_or_path ${MODEL_PATH} \
@@ -164,7 +164,7 @@ TOKENIZER_PATH="/data1/chh/models/meta-llama/Meta-Llama-3-8B-Instruct"
 #   --dataset_cache_dir hf_cache/dataset/ \
 #   --use_flash_attention_2 False \
 #   --max_length 1024 \
-#   --batch_size 1 \
+#   --batch_size 4 \
 #   --with_description True \
 #   --dataset_name my_dataset \
 #   --rerank_method pairwise
@@ -183,24 +183,24 @@ TOKENIZER_PATH="/data1/chh/models/meta-llama/Meta-Llama-3-8B-Instruct"
 #   --rerank_method listwise
 
 
-MODEL_PATH="/data1/chh/models/mistralai/Mistral-7B-Instruct-v0.2"
-TOKENIZER_PATH="/data1/chh/models/mistralai/Mistral-7B-Instruct-v0.2"
+MODEL_PATH="/data1/chh/models/mistralai/Mistral-7B-Instruct-v0.1"
+TOKENIZER_PATH="/data1/chh/models/mistralai/Mistral-7B-Instruct-v0.1"
 
 
-torchrun --nproc_per_node 1 rerank.py \
-  --eval_data ${EVAL_DATA_PATH}/my_dataset.jsonl \
-  --output_dir ${RESULT_PATH} \
-  --model_name_or_path ${MODEL_PATH} \
-  --tokenizer_name_or_path ${TOKENIZER_PATH} \
-  --dataset_cache_dir hf_cache/dataset/ \
-  --use_flash_attention_2 False \
-  --max_length 2048 \
-  --batch_size 4 \
-  --with_description True \
-  --dataset_name my_dataset \
-  --rerank_method pointwise
+# torchrun --nproc_per_node 1 rerank.py \
+#   --eval_data ${EVAL_DATA_PATH}/my_dataset.jsonl \
+#   --output_dir ${RESULT_PATH} \
+#   --model_name_or_path ${MODEL_PATH} \
+#   --tokenizer_name_or_path ${TOKENIZER_PATH} \
+#   --dataset_cache_dir hf_cache/dataset/ \
+#   --use_flash_attention_2 False \
+#   --max_length 2048 \
+#   --batch_size 4 \
+#   --with_description True \
+#   --dataset_name my_dataset \
+#   --rerank_method pointwise
 
-# torchrun --nproc_per_node 4 rerank.py \
+# torchrun --nproc_per_node 1 rerank.py \
 #   --eval_data ${EVAL_DATA_PATH}/my_dataset.jsonl \
 #   --output_dir ${RESULT_PATH} \
 #   --model_name_or_path ${MODEL_PATH} \

@@ -1,9 +1,4 @@
 import os
-
-os.environ["WORLD_SIZE"] = "1"
-os.environ['CUDA_VISIBLE_DEVICES']='7'
-
-
 import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
@@ -17,6 +12,12 @@ from src import (DatasetProcessFn, DefaultDataCollator, FileLogger, Metric,
 from torch.utils.data import DataLoader
 from transformers import HfArgumentParser
 from transformers.utils import logging
+
+# os.environ["WORLD_SIZE"] = "1"
+# os.environ['CUDA_VISIBLE_DEVICES']='7'
+
+
+
 
 logger = logging.get_logger(__name__)
 
@@ -267,7 +268,8 @@ def process_rerank(tokenizer, rerank_method, prompt_template, query_max_length=6
                 prompt="<|begin_of_text|> <|start_header_id|> system <|end_header_id|> \n\n You are an excellent planner <|start_header_id|> user <|end_header_id|> \n\n {} <|eot_id|> <|start_header_id|> assistant <|end_header_id|> \n\n".format(prompt) 
                 output=tokenizer(prompt)
             elif 'Mistral-7B-Instruct' in args.model_name_or_path:
-                prompt="<|system|> you are an excellent planner </s> \n\n <|user|> <s>[INST] {} [/INST] \n\n <|assistant|>".format(prompt)
+                # prompt="<|system|> you are an excellent planner </s> \n\n <|user|> <s>[INST] {} [/INST] \n\n <|assistant|>".format(prompt)
+                prompt="<s>[INST] {} [/INST]".format(prompt)
                 output=tokenizer(prompt)
             else:
                 output = tokenizer(prompt)
